@@ -216,14 +216,15 @@ The game is plain HTML, CSS and JavaScript for now, built simulation-first so ea
 **Milestones.** Each one ends with passing tests and something that can be run and checked.
 
 1. **Simulation core, headless.** Seeded randomness, clock, adventurer generation, classes and stats, quest truth and posting, expedition resolution, death, incident reports. Proven by running 100 simulated days from a seed twice and getting identical logs.
-2. **Desk, first playable.** Counter queue, quest request intake, posting form, quest board, time controls. One full working day is playable.
-3. **Inspect, registration and rank-ups.** Tiered information, with blanks and ranges at low tiers.
-4. **Gear, loot and appraisal.** Items, rarity, loot from quests, inspect on items.
-5. **Petitions, rumor feed, reputation and funds.** The daily event layer and its consequences.
-6. **City tutorial.** Station rotation with the mentor's checks, ending in the frontier offer.
-7. **Frontier.** Zone map that fills in from reports, dungeon growth, guild facilities and the truck stop.
-8. **Staff, policies and audits.** Hiring, standing rules, staff mistakes, the player's auditing tools.
-9. **Commendations and balance.** End goals, rival branches, headquarters ranking, tuning.
+2. **Core hardening.** Fixes from the milestone 1 audit (AUDIT.md): saves as a seed plus an input journal, a replay tool, bounded save size, hazard counters, the economy and party formation.
+3. **Desk, first playable.** Counter queue, quest request intake, posting form, quest board, time controls. One full working day is playable.
+4. **Inspect, registration and rank-ups.** Tiered information, with blanks and ranges at low tiers.
+5. **Gear, loot and appraisal.** Items, rarity, loot from quests, inspect on items.
+6. **Petitions, rumor feed, reputation and funds.** The daily event layer and its consequences.
+7. **City tutorial.** Station rotation with the mentor's checks, ending in the frontier offer.
+8. **Frontier.** Zone map that fills in from reports, dungeon growth, guild facilities and the truck stop.
+9. **Staff, policies and audits.** Hiring, standing rules, staff mistakes, the player's auditing tools.
+10. **Commendations and balance.** End goals, rival branches, headquarters ranking, tuning.
 
 ## Open questions
 

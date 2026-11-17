@@ -1,6 +1,58 @@
 # TODO
 
-## Current milestone: 1. Simulation core, headless
+## Current milestone: 2. Core hardening
+
+Scope comes from AUDIT.md. No page or interface yet. Items marked "decision" wait
+for the answer listed at the end of PROGRESS.md before building.
+
+**Done means:** `npm test` passes; a run can be saved as a seed plus an input
+journal, reloaded and replayed to the same state hash; every audit finding below is
+fixed or deliberately deferred with a note in PROGRESS.md.
+
+### Build
+
+- [ ] Input journal: every accepted clerk action is recorded with its tick and actor.
+      A save is the seed, the journal and the latest snapshot. (A1)
+- [ ] `tools/replay.js`: rebuild a run from a save, confirm the state hash, and print
+      every event of one expedition on request. (A1)
+- [ ] Bounded save size: trim the live log, and archive closed quests and finished
+      parties, so a year of play fits well inside browser storage. (A1, C5)
+- [ ] Hazard counters: apply the chosen rule. (A2, decision)
+- [ ] Economy: weight the request mix toward the roster's ranks, and add a
+      placeholder gold sink. (A3, decision)
+- [ ] Party formation: a cool-down before a leader retakes a quest they gave up on;
+      an empty slot may take a class that fills its job passably when nobody better
+      is free. (A4)
+- [ ] Incident report causes: going out injured; the trait behind a choice; both a
+      clerk's slip and an adventurer's lie when both happened; leader or follower.
+      (B1)
+- [ ] Failed-quest report volume: apply the chosen rule. (decision)
+- [ ] Decisions receive a read-only copy of the adventurer. (B6)
+- [ ] A reposted quest gets a fresh post time; adventurers in a forming party pay
+      upkeep and heal. (C1, C2)
+- [ ] `docs/events.md`: a schema for every log event type, kept in step with the
+      code. (C3)
+
+### Tests
+
+- [ ] A save made mid-run and replayed from its journal reaches the same state hash
+      as the live run.
+- [ ] A year of simulated play stays under the save-size budget.
+- [ ] Every hazard on every template can be countered by some valid party.
+- [ ] Adventurers who leave broke are no longer mostly rank F (measured over seeds).
+- [ ] No leader re-forms the same quest within the cool-down.
+- [ ] The careful-versus-careless test becomes statistically sound: more seeds and a
+      comparison of rates, with no loss of strength. (B2)
+- [ ] All milestone 1 tests keep passing.
+
+### Not in this milestone
+
+Any page or interface. Goals, rivals and retirement (B5) wait for milestone 3 or
+later, since they matter most at the counter. Client budgets against posted
+rewards (B4) wait for funds in milestone 6. Progression pace (B3) is measured but
+not tuned until the calendar is decided.
+
+## Milestone 1. Simulation core, headless
 
 No page, no interface. Everything runs under Node.
 
@@ -63,13 +115,14 @@ options wait for the systems they depend on.
 
 ## Later milestones
 
-Described in DESIGN.md. Write the checklist for each here when it starts.
+Described in DESIGN.md and VISION.md. Write the checklist for each here when it
+starts.
 
-2. Desk, first playable.
-3. Inspect, registration and rank-ups.
-4. Gear, loot and appraisal.
-5. Petitions, rumor feed, reputation and funds.
-6. City tutorial.
-7. Frontier.
-8. Staff, policies and audits.
-9. Commendations and balance.
+3. Desk, first playable.
+4. Inspect, registration and rank-ups.
+5. Gear, loot and appraisal.
+6. Petitions, rumor feed, reputation and funds.
+7. City tutorial.
+8. Frontier.
+9. Staff, policies and audits.
+10. Commendations and balance.

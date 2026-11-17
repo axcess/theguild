@@ -105,8 +105,24 @@ Decided with the user on 2026-11-17, before milestone 1:
 - 2026-11-17: Decided the seven open milestone 1 questions with the user. Built
   milestone 1: simulation core, data files, scripted clerk, run tool and 23 tests.
   Tuned death rates against the targets across 12 seeds.
+- 2026-11-17: Audited milestone 1 (AUDIT.md) and wrote the vision of the finished
+  game (VISION.md). Milestone 2 is now core hardening, built from the audit.
+  DESIGN.md's later milestones each move back by one.
 
-## Questions for milestone 2
+## Decisions needed for milestone 2
+
+From AUDIT.md. Milestone 2 builds the rest while these wait.
+
+- **Hazard counters (A2).** About 27% of hazards can't be countered, because their
+  counter job is not one the quest needs. Options: a hazard adds its counter job to
+  the quest's true needs; or any member who fits the counter job well blunts it,
+  perhaps less well if busy with another job.
+- **Gold sink before shops (A3).** Options: upkeep that rises with rank; a fee paid
+  to the guild on each quest; resting at an inn for gold.
+- **Failed-quest reports.** Keep one for every retreat (about 1.3 a day), or only
+  for retreats where someone was hurt.
+
+## Earlier questions, now covered by the audit
 
 - **Departures.** About a quarter of all arrivals leave within 100 days, mostly
   because they ran out of money. Is that the churn we want, or should the guild
