@@ -20,14 +20,15 @@ built, auditing staff who now make the mistakes you used to.
 **Hour 1: the city branch.** The morning bell rings. A young man in borrowed armor
 says he's a level 9 Warrior. Your Inspect is weak: you see a Warrior, plain gear,
 and a level "somewhere between 4 and 12". You write him down as rank E. Your mentor,
-Odile, reads the form over your shoulder and taps the rank box: "Too generous. Look
-at his boots." You change it to F. At the intake desk a miller wants rats cleared
-from his cellar for 20 gold. You post it at rank F, with no hazards listed. Odile
-catches that too: the cellar sits by the river, and river rats carry poison. This
+Maud, reads the form over your shoulder and taps the rank box: "Too generous. Look
+at his boots." You change it to F. At the intake desk the tithe-barn keeper says
+the rats have started biting the dogs, and he'll pay 20 gold. You post it at rank F,
+with no hazards listed. Maud catches that too: the barn sits by the river, and
+river rats carry poison. This
 is the only part of the game where someone checks your work.
 
 **Hour 5: the frontier.** One desk, a leaking roof, a wall map that is mostly blank.
-Eleven adventurers in town, and you know all of them by name. Brina the Cleric is
+Eleven adventurers in town, and you know all of them by name. Cecily the Cleric is
 the only healer, so every party you send without her worries you. A merchant wants
 an escort through the pass. Nobody has mapped the pass. You post it at rank D with
 "ambush?" in the hazard box, because a returning scout mentioned tracks. Three days
@@ -175,10 +176,12 @@ town charter is the "build a town" commendation.
 - **Proposal: shareable seeds.** A frontier comes from a seed, so players can trade
   zones. "Same seed, same choices, same deaths" becomes something players can use.
 - **Proposal: the replay viewer.** From any incident report, re-run the expedition
-  encounter by encounter. Determinism stops being a promise and becomes a feature.
+  encounter by encounter, so players can see the determinism for themselves.
 
 ## 9. Presentation
 
+- STYLE.md sets the rules for words and for the look, so the game doesn't read as
+  generated.
 - Fixed 2D desk scenes built from HTML and CSS, as DESIGN.md says. Placeholder
   shapes and text portraits until an art direction is chosen.
 - **Proposal: art and audio.** Painted desk scenes and illustrated portraits with a
@@ -257,7 +260,7 @@ milestones each move back by one.
 | 2 | Core hardening (from AUDIT.md) | A real player's game can be saved, replayed and audited, and the world is worth playing in |
 | 3 | Desk, first playable | One working day is playable and readable |
 | 4 | Inspect, registration and rank-ups | Better information visibly saves lives |
-| 5 | Gear, loot and appraisal | Items create decisions, not just numbers |
+| 5 | Gear, loot and appraisal | Items change who survives |
 | 6 | Petitions, news feed, reputation and funds | The branch can fail |
 | 7 | City tutorial | A new player learns the job without dying to it |
 | 8 | Frontier | The zone is unknown and gets mapped through reports |

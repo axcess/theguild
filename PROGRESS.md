@@ -108,6 +108,10 @@ Decided with the user on 2026-11-17, before milestone 1:
 - 2026-11-17: Audited milestone 1 (AUDIT.md) and wrote the vision of the finished
   game (VISION.md). Milestone 2 is now core hardening, built from the audit.
   DESIGN.md's later milestones each move back by one.
+- 2026-11-17: Content pass so the game doesn't read as generated: names from a
+  single medieval English register, quest titles in the client's voice, named
+  clients. Added STYLE.md (look and voice) and a content test for stock names and
+  phrases. Names and titles are cosmetic, so runs and balance are unchanged.
 
 ## Decisions needed for milestone 2
 

@@ -5,6 +5,7 @@ the counter. You never fight. Your paperwork decides who comes home.
 
 - [DESIGN.md](DESIGN.md): the game design, and the source of truth.
 - [VISION.md](VISION.md): the finished game, to plan backwards from.
+- [STYLE.md](STYLE.md): look and voice, and what to avoid.
 - [AUDIT.md](AUDIT.md): the milestone 1 audit, which sets milestone 2.
 - [TODO.md](TODO.md): the current milestone and what it needs.
 - [PROGRESS.md](PROGRESS.md): what is built, and the decisions made along the way.
