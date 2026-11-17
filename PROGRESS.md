@@ -2,34 +2,43 @@
 
 ## State
 
-Milestones 1 and 2 are done: the headless simulation core, hardened after the
-audit. All 37 tests pass. There is no page yet; milestone 3, the desk, is next.
+Milestones 1 to 3 are done. The headless core, hardened twice by audits, now has
+a desk on top: `index.html` is playable in a browser for a full working day and
+beyond. All 46 tests pass.
 
-- `src/sim/`: seeded generator, clock, adventurer generation, quest requests, clerk
-  actions (register, post, reject, each recording who acted), the decision and self
-  views, adventurer decisions, party formation, expedition resolution, permadeath,
-  levelling, incident reports, and saves with replay (`save.js`).
-- `src/data/`: classes, stats, jobs, ranks, traits, archetypes, names, quest
-  templates, hazards, and every tunable number in `tuning.js`.
-- `tools/clerk.js` is the scripted stand-in clerk; `tools/runner.js` drives a run
-  and gathers its full log. `tools/run.js` prints a run. `tools/replay.js` saves,
-  replays and verifies a run, and prints the events behind an expedition or an
-  incident report.
-- `docs/events.md` is the schema of every log event, checked by a test.
+- `src/sim/`: the simulation core. Since milestone 2 it also has pickup approval,
+  clients' accounts, board actions (pull, reprice), the desk view (`desk.js`),
+  "next event", and `act` for actions taken while paused.
+- `src/ui/`: the page. `render.js` is pure (view in, HTML out, tested under Node);
+  `main.js` holds page state and the clock; `desk.css` follows STYLE.md.
+- `src/data/ui.js`: timing for the desk.
+- `tools/`: the scripted clerk (which approves every pickup), runner, `run.js`,
+  `replay.js`.
+- `docs/events.md`: the event schema, checked by a test.
 
-Measured over seeds 1 to 12, 100 days each, after milestone 2:
+Measured over seeds 1 to 12, 100 days each, after milestone 3:
 
 | | Careful clerk (no errors) | Careless clerk (error 0.2) |
 | --- | --- | --- |
-| Deaths per run | 1.8 (0 to 4) | 5.3 (1 to 10) |
-| Expeditions per run | 362 | 364 |
-| Retreats per run | 27 | 77 |
-| Incident reports per run | 12 | 38 |
-| Left town broke per run | 3.5 | 2.8 |
-| Parties broken up per run | 235 | 252 |
+| Deaths per run | 2.5 (0 to 5) | 5.6 (2 to 9) |
+| Expeditions per run | 357 | 371 |
+| Incident reports per run | 11 | 45 |
+| Left town broke per run | 4.0 | 4.3 |
+| Parties broken up per run | 175 | 172 |
 
-Over 16 seeds the careless clerk loses 2.4 times as many adventurers (paired
-t statistic 3.6). A year of play saves in about 850 KB.
+A year saves in about 750 KB.
+
+**How milestone 3 was checked.** The folder was served and the desk played in
+Chromium by a script that uses only clicks and form input. It started a game from
+a ledger number and worked a full day: registered 17 newcomers at their claimed
+rank, wrote up and pinned the day's requests a rank above what clients said,
+approved 3 parties, and ran the clock at 3x (two hours in six seconds). It played
+on into day 3 to open an incident report. There were no page errors. Screenshots
+of the letter of appointment, the counter with a registration form and a pickup
+slip, the intake tray, the posting form, the ledger, the board, an open incident
+report and a 900-pixel-wide layout were looked at. A first, careless policy (every
+posting asked for a Warrior) left the board full and nobody out, which is the game
+working: bad postings go untaken.
 
 ## Decisions
 
@@ -124,6 +133,8 @@ Decided with the user on 2026-11-17, before milestone 1:
 - 2026-11-17: Built milestone 2, core hardening, with the user's go-ahead on the
   recommended decisions. All audit findings are fixed or deferred with a note. 37
   tests.
+- 2026-11-17: Audited milestone 2 (AUDIT.md) and built milestone 3, the desk, on
+  top of the fixes it called for. Played through in a browser. 46 tests.
 
 ## Milestone 2 decisions, taken 2026-11-17
 
@@ -187,6 +198,33 @@ Test changes in milestone 2, none of them weakening:
   mentions some of the hazards but never invents one. They offer at most what they
   can pay.
 - **Tells:** only an obvious injury shows at the counter until Inspect arrives.
+
+## Added while building milestone 3, to be confirmed
+
+- **Spare hands and crowds.** Members beyond the jobs a quest truly needs help at
+  half strength, and each one adds 30% of a job's threat: a crowd draws notice.
+  With only the first rule, padding every posting with two spare places still cut
+  deaths by 70% once parties had time to fill. With both, it cuts them by about
+  15%. More hands help a little, as they should.
+- **Waiting counts open hours only.** A forming party waits 18 open hours before
+  the leader decides. Counting night hours made parties give up overnight while
+  nobody could join; playing the desk showed a ledger full of 2 a.m. break-ups.
+- **Pickups at night.** A party can be ready at night; it waits at the counter
+  until morning, and the ledger says it is "ready to set out".
+- **Clients' accounts** understate rank 45% of the time, by one or two ranks;
+  mention each real hazard half the time; offer 60 to 100% of their budget.
+- **The posting form starts from the client's account:** their rank, the
+  hazards they mentioned, their offer, one place for anyone. The player corrects it.
+- **Registration has no default rank.** The clerk must choose one.
+- **The two scenes** are the desk (counter, intake tray, posting form, ledger,
+  incident tray) and the board behind it, reached by "Turn to the board".
+- **Seeds are "ledger numbers"** in the letter of appointment. The page picks a
+  random one if left blank; the simulation itself stays seeded.
+- **Incident reports show findings the desk could not see before,** such as true
+  levels, because they are the investigation's results. DESIGN.md's example does
+  the same.
+- **The ledger's ruled lines** use a CSS repeating line, the one place the page
+  draws with a gradient; STYLE.md asks for a ledger with lines.
 
 ## Open after milestone 2
 

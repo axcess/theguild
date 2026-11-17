@@ -43,7 +43,11 @@ export function resolveExpedition(state, party) {
     // Spare hands, beyond the jobs the quest truly needs, help at reduced strength.
     for (const m of alive) power += rawPower(m) * party.fit[m.id] * condition(m) * (party.assign[m.id] === null ? E.spareHands : 1);
     power *= E.missingJobMult ** party.missing.length;
-    const threat = E.threatMult * truth.jobs.length * expectedPower(truth.level) * randRange(state, E.threatJitter[0], E.threatJitter[1]);
+    // A bigger party than the work needs draws more notice: each spare hand adds a
+    // little to the threat.
+    const spares = alive.filter((m) => party.assign[m.id] === null).length;
+    const threat =
+      E.threatMult * (truth.jobs.length + spares * E.crowdThreat) * expectedPower(truth.level) * randRange(state, E.threatJitter[0], E.threatJitter[1]);
     const ratio = power / threat;
     const roll = ratio * randRange(state, E.rollSpread[0], E.rollSpread[1]);
     const severity = roll >= 1 ? 'clean' : roll >= E.failBelow ? 'hard' : 'failed';

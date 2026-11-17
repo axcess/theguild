@@ -21,12 +21,16 @@ export function createState(seed) {
   return state;
 }
 
+// Applies one clerk action now, without moving time, and journals it if accepted.
+// This is how the desk acts while the game is paused.
+export function act(state, action) {
+  const result = applyAction(state, action);
+  if (result.ok) state.journal.push({ t: state.tick, action: structuredClone(action) });
+  return result;
+}
+
 export function step(state, actions = []) {
-  const results = actions.map((action) => {
-    const result = applyAction(state, action);
-    if (result.ok) state.journal.push({ t: state.tick, action: structuredClone(action) });
-    return result;
-  });
+  const results = actions.map((action) => act(state, action));
   advance(state);
   return results;
 }

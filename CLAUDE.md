@@ -28,6 +28,9 @@ Where it lists an open question, use the working assumption and note it in PROGR
 
 - `src/sim/`: the simulation core. ES modules, no page access, no dependencies.
 - `src/data/`: game content as ES modules that export plain data.
+- `src/ui/`: the page. It reads the desk view and changes the simulation only
+  through `act` and `step`.
+- `index.html`: the desk.
 - `tests/`: tests for Node's built-in runner, named `*.test.js`.
 - `tools/`: headless scripts, such as running a seed and printing its log.
 - `prompts/`: the briefs used to start work sessions.

@@ -1,6 +1,12 @@
 # TODO
 
-## Current milestone: 3. Desk, first playable
+## Current milestone: 4. Inspect, registration and rank-ups
+
+Not started. Write its checklist here when it starts, after auditing milestone 3.
+
+## Milestone 3. Desk, first playable
+
+**Status: done** on 2026-11-17. Played through in Chromium; see PROGRESS.md.
 
 The first page. The player sits at the desk and works one full day: registering
 newcomers, reading requests, writing postings, approving or refusing pickups, and
@@ -14,44 +20,44 @@ and it follows STYLE.md.
 
 ### Simulation first (from the milestone 2 audit)
 
-- [ ] Spare hands: members beyond the quest's true jobs help at half strength. (D1)
-- [ ] Pickup approval: a ready party queues at the counter and waits for an
+- [x] Spare hands: members beyond the quest's true jobs help at half strength. (D1)
+- [x] Pickup approval: a ready party queues at the counter and waits for an
       `approve` or `refuse` action; a refused party breaks up and won't retake the
       quest for a while. The scripted clerk approves. (D2)
-- [ ] The client's account on every request: the rank they think it is, the
+- [x] The client's account on every request: the rank they think it is, the
       hazards they mention, what they offer. (D3)
-- [ ] Board actions: `pull` a posting off the board, `reprice` its reward.
-- [ ] A desk view: everything the page may show, built without the truth. The
+- [x] Board actions: `pull` a posting off the board, `reprice` its reward.
+- [x] A desk view: everything the page may show, built without the truth. The
       counter queue (newcomers to register, parties to approve, oldest first), the
       intake tray, the board, parties out, incident reports, today's ledger.
 
 ### The page
 
-- [ ] `index.html` and `src/ui/`: one fixed desk scene, made of paper, ink and wood
+- [x] `index.html` and `src/ui/`: one fixed desk scene, made of paper, ink and wood
       as STYLE.md says.
-- [ ] Counter: the person at the front of the queue, with a text portrait and
+- [x] Counter: the person at the front of the queue, with a text portrait and
       what they say. A registration form (class and rank) or a pickup slip
       (approve or refuse).
-- [ ] Intake tray: requests in the client's words. Pick one to write it up.
-- [ ] Posting form: rank, recommended level, hazards, places with recommended
+- [x] Intake tray: requests in the client's words. Pick one to write it up.
+- [x] Posting form: rank, recommended level, hazards, places with recommended
       classes, reward. Pin it to the board, or reject the request.
-- [ ] Quest board: pinned postings and their state, with pull and reprice.
-- [ ] Incident tray and the day's ledger.
-- [ ] Time: pause, 1x, 2x, 3x and "next event". The night runs on quickly, and the
+- [x] Quest board: pinned postings and their state, with pull and reprice.
+- [x] Incident tray and the day's ledger.
+- [x] Time: pause, 1x, 2x, 3x and "next event". The night runs on quickly, and the
       world never freezes while skipping.
-- [ ] A new game from a seed.
+- [x] A new game from a seed.
 
 ### Tests
 
-- [ ] The desk view never holds a quest's truth or an adventurer's hidden
+- [x] The desk view never holds a quest's truth or an adventurer's hidden
       identity (true class, level, stats, traits).
-- [ ] A client's account never overstates: stated rank at or below the truth,
+- [x] A client's account never overstates: stated rank at or below the truth,
       hazards mentioned are real, the offer is within the budget.
-- [ ] A ready party does not set out until approved; a refused one never does.
-- [ ] Padding a posting with spare places no longer cuts deaths sharply.
-- [ ] "Next event" stops when someone reaches the counter or a request arrives.
-- [ ] The page code changes the simulation only through actions.
-- [ ] All earlier tests keep passing.
+- [x] A ready party does not set out until approved; a refused one never does.
+- [x] Padding a posting with spare places no longer cuts deaths sharply.
+- [x] "Next event" stops when someone reaches the counter or a request arrives.
+- [x] The page code changes the simulation only through actions.
+- [x] All earlier tests keep passing.
 
 ### Not in this milestone
 
@@ -180,7 +186,6 @@ options wait for the systems they depend on.
 Described in DESIGN.md and VISION.md. Write the checklist for each here when it
 starts.
 
-4. Inspect, registration and rank-ups.
 5. Gear, loot and appraisal.
 6. Petitions, rumor feed, reputation and funds.
 7. City tutorial.

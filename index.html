@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Guild</title>
+  <link rel="stylesheet" href="src/ui/desk.css">
+</head>
+<body>
+  <main id="appointment" class="room">
+    <form class="paper letter">
+      <p class="small right">Guild headquarters, the city</p>
+      <h1>Letter of appointment</h1>
+      <p>You are to take up the post of clerk at the branch counter, starting at the
+        morning bell. You will register those who come to the counter, write up the
+        town's requests, and approve or refuse each party that asks to set out.</p>
+      <p>Your paperwork decides who comes home. Mind it.</p>
+      <p class="row"><label class="label" for="seed">Ledger number</label>
+        <input id="seed" name="seed" autocomplete="off"></p>
+      <p class="small">The ledger number fixes how the world turns out. The same number and
+        the same choices give the same day, death for death.</p>
+      <button type="submit" class="stamp">Take up the post</button>
+    </form>
+  </main>
+
+  <main id="game" class="room" hidden>
+    <header class="wall">
+      <div id="calendar" class="paper calendar"></div>
+      <div class="plate" role="group" aria-label="Time">
+        <button type="button" data-speed="0">Pause</button>
+        <button type="button" data-speed="1">1&times;</button>
+        <button type="button" data-speed="2">2&times;</button>
+        <button type="button" data-speed="3">3&times;</button>
+        <button type="button" data-act="next">Next event</button>
+      </div>
+      <div class="wall-right">
+        <button type="button" class="pen light" data-act="turn" id="turn">Turn to the board</button>
+        <span id="board-count" class="small light"></span>
+        <button type="button" class="pen light" data-act="new-game">New appointment</button>
+      </div>
+    </header>
+
+    <div id="scene-desk">
+      <section class="counter-top" aria-label="The counter">
+        <div id="counter"></div>
+      </section>
+      <section class="desk">
+        <div class="tray">
+          <h2>Intake tray <span id="intake-count"></span></h2>
+          <div id="intake" class="stack"></div>
+        </div>
+        <div id="posting" class="writing"></div>
+        <div class="side">
+          <div class="paper ledger">
+            <h2>Today's ledger</h2>
+            <div id="ledger"></div>
+          </div>
+          <div class="tray incidents">
+            <h2>Incident tray <span id="incident-count"></span></h2>
+            <div id="incidents" class="stack"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="scene-board" hidden>
+      <div id="board" class="board-wall"></div>
+    </div>
+
+    <div id="report" class="overlay" hidden></div>
+    <p id="note" class="note" role="status" hidden></p>
+  </main>
+
+  <script type="module" src="src/ui/main.js"></script>
+</body>
+</html>

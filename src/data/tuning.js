@@ -113,7 +113,7 @@ export const TUNING = {
     reachUpPenalty: 18,
     noise: 6,
     actThreshold: 4,
-    formWaitTicks: 18, // hours a leader waits for a full party
+    formWaitTicks: 18, // open hours a leader waits for a full party
     joinBonus: 8, // joining a party already forming beats starting another
     shunTicks: 48, // after giving up on a quest, hours before taking it again
   },
@@ -130,6 +130,7 @@ export const TUNING = {
     failBelow: 0.7, // roll below this loses the encounter
     missingJobMult: 0.8, // party power multiplier per uncovered job
     spareHands: 0.5, // strength of members beyond the jobs truly needed
+    crowdThreat: 0.3, // threat each spare hand adds, as a share of one needed job
     hits: { clean: 1, hard: 2 }, // failed hits everyone
     damage: { clean: [0, 0.12], hard: [0.2, 0.45], failed: [0.4, 0.8] },
     // countered: someone assigned to the counter job; helped: someone else in the

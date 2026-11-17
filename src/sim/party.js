@@ -3,6 +3,7 @@
 import { TUNING } from '../data/tuning.js';
 import { fitOf } from './adventurers.js';
 import { buildSelfView } from './view.js';
+import { counterOpen } from './clock.js';
 import { decideAfterWaiting } from './decide.js';
 import { logEvent, findAdventurer, findQuest } from './state.js';
 
@@ -15,6 +16,7 @@ export function formParty(state, adv, questId, slot, reachedUp, stopgap = false)
     slots: quest.posting.slots.map((classes) => ({ classes: [...classes], member: null, reachedUp: false })),
     status: 'forming', // forming, awaiting (at the counter), away, done, disbanded
     formedAt: state.tick,
+    waited: 0, // open hours spent waiting for the party to fill
     members: [],
     assign: null,
     missing: null,
@@ -179,9 +181,11 @@ export function checkFormingParties(state) {
   for (const party of state.parties) {
     if (party.status !== 'forming') continue;
     const filled = party.slots.filter((s) => s.member !== null).length;
+    // Only open hours count as waiting: nobody can join at night.
+    if (counterOpen(state.tick)) party.waited += 1;
     if (filled === party.slots.length) {
       askForPickup(state, party, false);
-    } else if (state.tick - party.formedAt >= TUNING.decision.formWaitTicks) {
+    } else if (party.waited >= TUNING.decision.formWaitTicks) {
       const leader = findAdventurer(state, party.leader);
       const choice = decideAfterWaiting(buildSelfView(leader), filled, party.slots.length);
       if (choice === 'depart') {

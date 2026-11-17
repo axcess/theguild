@@ -17,6 +17,14 @@ Plain HTML, CSS and JavaScript with no build step and no dependencies.
 npm test
 ```
 
+Play at the desk: serve the folder and open it in a browser.
+
+```bash
+python3 -m http.server 8000
+```
+
+Then go to http://localhost:8000.
+
 Run a seed and read its incident reports, or replay and verify a save:
 
 ```bash
