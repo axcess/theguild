@@ -62,6 +62,8 @@ export function findParty(state, id) {
   return state.parties.find((p) => p.id === id) ?? null;
 }
 
+// An adventurer's career: arrival, registration, each return and its outcome,
+// injuries, levels, and how it ended. The event log holds the rest.
 export function addHistory(adv, tick, what, extra = {}) {
   adv.history.push({ t: tick, what, ...extra });
 }

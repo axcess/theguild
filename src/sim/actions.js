@@ -5,7 +5,8 @@ import { CLASS_IDS } from '../data/classes.js';
 import { RANKS } from '../data/ranks.js';
 import { HAZARD_IDS } from '../data/quests.js';
 import { counterOpen } from './clock.js';
-import { logEvent, findAdventurer, findQuest, addHistory } from './state.js';
+import { logEvent, findAdventurer, findQuest, findParty, addHistory } from './state.js';
+import { depart, disband } from './party.js';
 
 const refuse = (reason) => ({ ok: false, reason });
 
@@ -67,6 +68,36 @@ export function applyAction(state, action) {
       if (!quest || quest.status !== 'requested') return refuse('no such request');
       quest.status = 'rejected';
       logEvent(state, 'reject', { by, quest: quest.id });
+      return { ok: true };
+    }
+    case 'approve': {
+      const party = findParty(state, action.party);
+      if (!party || party.status !== 'awaiting') return refuse('no such party at the counter');
+      logEvent(state, 'pickup_approved', { by, party: party.id, quest: party.quest });
+      depart(state, party, party.short);
+      return { ok: true };
+    }
+    case 'refuse': {
+      const party = findParty(state, action.party);
+      if (!party || party.status !== 'awaiting') return refuse('no such party at the counter');
+      logEvent(state, 'pickup_refused', { by, party: party.id, quest: party.quest });
+      disband(state, party, 'refused');
+      return { ok: true };
+    }
+    case 'pull': {
+      const quest = findQuest(state, action.quest);
+      if (!quest || quest.status !== 'posted') return refuse('not on the board');
+      quest.status = 'pulled';
+      quest.closedAt = state.tick;
+      logEvent(state, 'pull', { by, quest: quest.id });
+      return { ok: true };
+    }
+    case 'reprice': {
+      const quest = findQuest(state, action.quest);
+      if (!quest || quest.status !== 'posted') return refuse('not on the board');
+      if (!Number.isInteger(action.reward) || action.reward < 0) return refuse('invalid reward');
+      quest.posting.reward = action.reward;
+      logEvent(state, 'reprice', { by, quest: quest.id, reward: action.reward });
       return { ok: true };
     }
     default:

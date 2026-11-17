@@ -61,8 +61,9 @@ Fields: victim, name, party, quest
 
 ### `request`
 A client brings a request. `truth` is the hidden truth and must never reach the
-desk or the decision code.
-Fields: quest, title, client, truth
+desk or the decision code. `account` is what the client says: the `rank` they
+think it is, the `hazards` they mention and the gold they `offer`.
+Fields: quest, title, client, account, truth
 
 ### `post`
 The clerk posts a request.
@@ -73,6 +74,14 @@ recommended classes per place, empty for any class) and `description`.
 
 ### `reject`
 Fields: by, quest
+
+### `pull`
+The clerk takes a posting off the board.
+Fields: by, quest
+
+### `reprice`
+The clerk changes a posting's reward.
+Fields: by, quest, reward
 
 ### `request_lapsed`
 A request was neither posted nor rejected in time.
@@ -96,9 +105,21 @@ fill its job passably and nobody of that class was free.
 Fields: party, quest, adv, slot, reachedUp, stopgap
 
 ### `party_disband`
-The party gave up waiting. The posting goes back on the board, and its members
-won't retake it for a while.
-Fields: party, quest, leader
+The party broke up: it gave up waiting, or the clerk refused the pickup. The
+posting goes back on the board, and its members won't retake it for a while.
+Fields: party, quest, leader, reason
+
+`reason` is `gave up` or `refused`.
+
+### `pickup_requested`
+A ready party comes to the counter and waits for the clerk.
+Fields: party, quest, leader, short
+
+### `pickup_approved`
+Fields: by, party, quest
+
+### `pickup_refused`
+Fields: by, party, quest
 
 ### `depart_short`
 The leader sets out without every place filled.

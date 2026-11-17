@@ -175,6 +175,19 @@ Test changes in milestone 2, none of them weakening:
   down from about 20". Once few leave broke, the rank F share of a handful of cases
   is noise; the count is what mattered.
 
+## Working assumptions for milestone 3
+
+- **Pace** (open question on the time model): at 1x, one in-game hour takes about
+  8 seconds while the counter is open, as VISION.md proposes. 2x and 3x divide
+  that. Night runs at about a quarter of a second an hour at any speed. "Next
+  event" never freezes the world.
+- **Pickups:** a ready party waits at the counter for as long as it takes. The
+  queue is in front of the player, so nobody slips past it.
+- **Clients understate.** A client often names a lower rank than the truth, and
+  mentions some of the hazards but never invents one. They offer at most what they
+  can pay.
+- **Tells:** only an obvious injury shows at the counter until Inspect arrives.
+
 ## Open after milestone 2
 
 - **Progression (B3)** is about 23 level-ups per run and is not yet tuned. It

@@ -103,7 +103,7 @@ function newDay(state) {
 // incident reports keep what happened.
 function archive(state) {
   const cutoff = state.tick - TUNING.save.archiveAfterDays * DAY;
-  const done = ['closed', 'rejected', 'lapsed', 'expired'];
+  const done = ['closed', 'rejected', 'lapsed', 'expired', 'pulled'];
   const lastTouched = (q) => Math.max(q.requestedAt, q.postedAt ?? 0, q.closedAt ?? 0);
   state.quests = state.quests.filter((q) => !(done.includes(q.status) && lastTouched(q) < cutoff));
   state.parties = state.parties.filter((p) => !((p.status === 'done' || p.status === 'disbanded') && (p.endedAt ?? 0) < cutoff));
@@ -160,7 +160,6 @@ function decisions(state) {
         break;
       case 'take':
         formParty(state, adv, choice.quest, choice.slot, choice.reachedUp, choice.stopgap);
-        addHistory(adv, state.tick, 'took_quest', { quest: choice.quest });
         view = null;
         break;
       case 'join':

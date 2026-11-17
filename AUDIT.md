@@ -1,3 +1,86 @@
+# Audits
+
+- Milestone 2, core hardening: below.
+- Milestone 1, the headless simulation core: further down.
+
+# Audit: milestone 2, core hardening
+
+Audited 2026-11-17, at commit `cafd6fe`. The findings set the simulation work that
+milestone 3 needs before the desk can sit on top.
+
+## Verdict
+
+The hardening holds up. Saves replay exactly from any tick, the live log never
+loses an event a report needs, and the economy and party fixes did what they were
+meant to. One finding makes a desk control meaningless (D1). Two show the core
+can't yet support what the desk is for (D2, D3).
+
+## How it was checked
+
+- Re-read every file changed in milestone 2.
+- Checked invariants every 5 ticks over 3 careless runs of 100 days: party and
+  quest pointers, and archived quests and trimmed log entries that are still needed.
+- Made saves at ticks 0, 1, 5, 23, 24, mid-run and late at night. Verified each
+  and loaded it to the same hash.
+- Ran two years in one go, measured the save, and replayed it.
+- Tried to game the new rules: padding every posting with extra places.
+- Measured what the desk would see each day once the run settles.
+
+## What holds
+
+| Check | Result |
+| --- | --- |
+| Invariant violations, 3 runs × 2,400 ticks | None |
+| Saves at awkward ticks verify and load to the same hash | All of them |
+| Two years of play | Simulated in 1.7 s, saves in 1.6 MB, replay matches |
+| Live state after two years | 420 log events, 51 quests, 99 parties: bounded |
+
+## Findings
+
+### High
+
+**D1. Padding a posting is free safety.** Members beyond the quest's true jobs add
+their full strength, and the only cost is a thinner reward share. A careful clerk
+who adds two "any class" places to every posting loses 4 adventurers over 6 seeds
+instead of 13. Once the player sets party size at the desk, "always pad" would be
+the only sensible play, and recommended party size would stop being a judgment.
+*Recommendation:* spare hands help at reduced strength (half), so a sixth sword
+is worth less than the right one.
+
+**D2. There is no pickup approval.** DESIGN.md's working assumption is that
+adventurers pick from the board and the player can approve or refuse at the
+counter. Parties currently set out the moment they fill. The counter, the heart of
+the desk, has nothing to do but registration.
+*Recommendation:* a party that is ready queues at the counter and waits for an
+approve or refuse action. The scripted clerk approves.
+
+**D3. Requests have no client's account.** The scripted clerk reads the truth.
+The player must not, and there is nothing else to post from but the title.
+DESIGN.md says clients undersell danger and Inspect reveals the truth later.
+*Recommendation:* each request carries the client's own account: the rank they
+think it is (often low), the hazards they mention (some, never invented), and what
+they offer (at most what they can pay).
+
+### Medium
+
+**D4. The counter goes quiet once the cast is full.** At 40 adventurers, arrivals
+drop to about 0.2 a day, and only about 7 leave in 100 days. The desk will mostly
+see pickups. That is acceptable for now. Revisit with the frontier's smaller cast
+(Act 2).
+
+**D5. The save grows about 0.8 MB a year,** mostly incident reports, the fallen and
+the journal. VISION.md's longest play (about 3 years) fits in local storage, but
+the budget test covers only one year.
+
+### Low
+
+- **D6.** A stopgap place is blocked if anyone of the named class is free, even
+  someone whose rank doesn't allow the posting. Stopgaps are rare (20 of about
+  2,500 fills), so this matters little.
+- **D7.** Verifying a save replays the whole game: about 0.8 s per year of play.
+  That's fine on demand. Loading uses the snapshot, not replay.
+- **D8.** Bad luck is still rarely a cause (carried over from milestone 2).
+
 # Audit: milestone 1, the headless simulation core
 
 Audited 2026-11-17, at commit `e76204d`. The findings here set the scope of

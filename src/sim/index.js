@@ -6,3 +6,4 @@ export { dayOf, hourOf, phaseOf, counterOpen, formatTime } from './clock.js';
 export { rankForLevel } from './adventurers.js';
 export { STATE_VERSION } from './state.js';
 export { makeSave, loadSave, replay, verifySave, stateHash } from './save.js';
+export { buildDeskView, skipToNextEvent } from './desk.js';

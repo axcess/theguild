@@ -25,6 +25,9 @@ export const TUNING = {
     hour: 6,
     perDay: [3, 5],
     rosterBias: 0.6, // chance a request is pitched at the rank of someone in town
+    // What the client says. They often think it is easier than it is, mention
+    // some hazards but never invent one, and offer at most their budget.
+    client: { understateChance: 0.45, understateBy: [1, 2], mentionChance: 0.5, offerShare: [0.6, 1] },
     payBasePerJob: 18, // client's true budget per job is base + perRank * rank,
     payPerRankPerJob: 12, // before a +-20% roll
     requestExpiryDays: 3, // unposted requests lapse
@@ -126,6 +129,7 @@ export const TUNING = {
     rollSpread: [0.75, 1.25],
     failBelow: 0.7, // roll below this loses the encounter
     missingJobMult: 0.8, // party power multiplier per uncovered job
+    spareHands: 0.5, // strength of members beyond the jobs truly needed
     hits: { clean: 1, hard: 2 }, // failed hits everyone
     damage: { clean: [0, 0.12], hard: [0.2, 0.45], failed: [0.4, 0.8] },
     // countered: someone assigned to the counter job; helped: someone else in the

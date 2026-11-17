@@ -4,7 +4,7 @@ import { TUNING } from '../data/tuning.js';
 import { fitOf } from './adventurers.js';
 import { buildSelfView } from './view.js';
 import { decideAfterWaiting } from './decide.js';
-import { logEvent, findAdventurer, findQuest, addHistory } from './state.js';
+import { logEvent, findAdventurer, findQuest } from './state.js';
 
 export function formParty(state, adv, questId, slot, reachedUp, stopgap = false) {
   const quest = findQuest(state, questId);
@@ -13,7 +13,7 @@ export function formParty(state, adv, questId, slot, reachedUp, stopgap = false)
     quest: questId,
     leader: adv.id,
     slots: quest.posting.slots.map((classes) => ({ classes: [...classes], member: null, reachedUp: false })),
-    status: 'forming', // forming, away, done, disbanded
+    status: 'forming', // forming, awaiting (at the counter), away, done, disbanded
     formedAt: state.tick,
     members: [],
     assign: null,
@@ -22,6 +22,7 @@ export function formParty(state, adv, questId, slot, reachedUp, stopgap = false)
     departLog: null,
     returnTick: null,
     endedAt: null,
+    readyAt: null,
   };
   state.parties.push(party);
   quest.status = 'taken';
@@ -42,7 +43,6 @@ function seat(state, party, adv, slot, reachedUp) {
   party.members.push(adv.id);
   adv.status = 'forming';
   adv.party = party.id;
-  addHistory(adv, state.tick, 'joined_party', { quest: party.quest });
 }
 
 // Assign the truly needed jobs to members by true class, choosing the assignment
@@ -105,7 +105,7 @@ export function assignJobs(members, jobs) {
   return { assign, fit, missing };
 }
 
-function depart(state, party, short) {
+export function depart(state, party, short) {
   const quest = findQuest(state, party.quest);
   const members = party.slots.filter((s) => s.member !== null).map((s) => findAdventurer(state, s.member));
   const { assign, fit, missing } = assignJobs(members, quest.truth.jobs);
@@ -153,11 +153,10 @@ function depart(state, party, short) {
   });
   for (const m of members) {
     m.status = 'away';
-    addHistory(m, state.tick, 'departed', { quest: quest.id });
   }
 }
 
-function disband(state, party) {
+export function disband(state, party, reason = 'gave up') {
   const quest = findQuest(state, party.quest);
   party.status = 'disbanded';
   party.endedAt = state.tick;
@@ -170,24 +169,34 @@ function disband(state, party) {
     m.party = null;
     m.shunned.push({ quest: quest.id, until: state.tick + TUNING.decision.shunTicks });
   }
-  logEvent(state, 'party_disband', { party: party.id, quest: quest.id, leader: party.leader });
+  logEvent(state, 'party_disband', { party: party.id, quest: quest.id, leader: party.leader, reason });
 }
 
+// A party that is ready (full, or a leader willing to go short) does not set out
+// on its own: it queues at the counter and waits for the clerk to approve or
+// refuse the pickup.
 export function checkFormingParties(state) {
   for (const party of state.parties) {
     if (party.status !== 'forming') continue;
     const filled = party.slots.filter((s) => s.member !== null).length;
     if (filled === party.slots.length) {
-      depart(state, party, false);
+      askForPickup(state, party, false);
     } else if (state.tick - party.formedAt >= TUNING.decision.formWaitTicks) {
       const leader = findAdventurer(state, party.leader);
       const choice = decideAfterWaiting(buildSelfView(leader), filled, party.slots.length);
       if (choice === 'depart') {
         logEvent(state, 'depart_short', { party: party.id, leader: leader.id, filled, size: party.slots.length });
-        depart(state, party, true);
+        askForPickup(state, party, true);
       } else {
         disband(state, party);
       }
     }
   }
+}
+
+function askForPickup(state, party, short) {
+  party.status = 'awaiting';
+  party.short = short;
+  party.readyAt = state.tick;
+  logEvent(state, 'pickup_requested', { party: party.id, quest: party.quest, leader: party.leader, short });
 }

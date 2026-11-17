@@ -37,14 +37,22 @@ export function generateRequest(state) {
     durationTicks: randInt(state, template.hours[0], template.hours[1]),
     pay: Math.round((R.payBasePerJob + R.payPerRankPerJob * rank) * template.jobs.length * randRange(state, 0.8, 1.2)),
   };
+  // The client's own account: all the desk has to go on until Inspect.
+  const C = R.client;
+  const account = {
+    rank: chance(state, C.understateChance) ? Math.max(0, rank - randInt(state, C.understateBy[0], C.understateBy[1])) : rank,
+    hazards: truth.hazards.filter(() => chance(state, C.mentionChance)),
+    offer: Math.round(truth.pay * randRange(state, C.offerShare[0], C.offerShare[1])),
+  };
   const quest = {
     id: state.nextId.quest++,
     template: template.id,
     title: template.title,
     client: pick(state, CLIENTS),
     requestedAt: state.tick,
-    status: 'requested', // requested, posted, rejected, lapsed, expired, taken, away, closed
+    status: 'requested', // requested, posted, rejected, lapsed, expired, pulled, taken, away, closed
     truth,
+    account,
     posting: null,
     postedAt: null,
     closedAt: null,
@@ -56,6 +64,7 @@ export function generateRequest(state) {
     quest: quest.id,
     title: quest.title,
     client: quest.client,
+    account: structuredClone(account),
     truth: structuredClone(truth),
   });
   return quest;

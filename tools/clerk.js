@@ -37,6 +37,11 @@ export function clerkActions(clerk, state) {
     actions.push({ type: 'register', adv: adv.id, cls, rank });
   }
 
+  // The stand-in approves every pickup. Refusing is the player's tool.
+  for (const p of state.parties) {
+    if (p.status === 'awaiting') actions.push({ type: 'approve', party: p.id });
+  }
+
   const topRank = Math.max(0, ...state.adventurers.filter((a) => a.record).map((a) => a.record.rank));
   for (const q of state.quests) {
     if (q.status !== 'requested') continue;

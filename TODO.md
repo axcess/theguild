@@ -2,8 +2,62 @@
 
 ## Current milestone: 3. Desk, first playable
 
-Not started. Write its checklist here when it starts, from DESIGN.md, VISION.md
-and STYLE.md. Open points it depends on are listed in PROGRESS.md.
+The first page. The player sits at the desk and works one full day: registering
+newcomers, reading requests, writing postings, approving or refusing pickups, and
+reading what comes back. The simulation stays headless. The page only reads views
+of the state and sends actions.
+
+**Done means:** `npm test` passes; serving the folder and opening `index.html`
+gives a desk where one full working day, from opening to closing, can be played
+with the mouse alone; it has been played through in a real browser and looked at;
+and it follows STYLE.md.
+
+### Simulation first (from the milestone 2 audit)
+
+- [ ] Spare hands: members beyond the quest's true jobs help at half strength. (D1)
+- [ ] Pickup approval: a ready party queues at the counter and waits for an
+      `approve` or `refuse` action; a refused party breaks up and won't retake the
+      quest for a while. The scripted clerk approves. (D2)
+- [ ] The client's account on every request: the rank they think it is, the
+      hazards they mention, what they offer. (D3)
+- [ ] Board actions: `pull` a posting off the board, `reprice` its reward.
+- [ ] A desk view: everything the page may show, built without the truth. The
+      counter queue (newcomers to register, parties to approve, oldest first), the
+      intake tray, the board, parties out, incident reports, today's ledger.
+
+### The page
+
+- [ ] `index.html` and `src/ui/`: one fixed desk scene, made of paper, ink and wood
+      as STYLE.md says.
+- [ ] Counter: the person at the front of the queue, with a text portrait and
+      what they say. A registration form (class and rank) or a pickup slip
+      (approve or refuse).
+- [ ] Intake tray: requests in the client's words. Pick one to write it up.
+- [ ] Posting form: rank, recommended level, hazards, places with recommended
+      classes, reward. Pin it to the board, or reject the request.
+- [ ] Quest board: pinned postings and their state, with pull and reprice.
+- [ ] Incident tray and the day's ledger.
+- [ ] Time: pause, 1x, 2x, 3x and "next event". The night runs on quickly, and the
+      world never freezes while skipping.
+- [ ] A new game from a seed.
+
+### Tests
+
+- [ ] The desk view never holds a quest's truth or an adventurer's hidden
+      identity (true class, level, stats, traits).
+- [ ] A client's account never overstates: stated rank at or below the truth,
+      hazards mentioned are real, the offer is within the budget.
+- [ ] A ready party does not set out until approved; a refused one never does.
+- [ ] Padding a posting with spare places no longer cuts deaths sharply.
+- [ ] "Next event" stops when someone reaches the counter or a request arrives.
+- [ ] The page code changes the simulation only through actions.
+- [ ] All earlier tests keep passing.
+
+### Not in this milestone
+
+Inspect and visible tells beyond an obvious injury (milestone 4). Saving and loading
+in the browser. Gear, petitions, funds, the mentor. Art beyond placeholder shapes
+and text portraits.
 
 ## Milestone 2. Core hardening
 
