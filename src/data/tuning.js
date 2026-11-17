@@ -24,7 +24,9 @@ export const TUNING = {
   requests: {
     hour: 6,
     perDay: [3, 5],
-    payPerRankPerJob: 12, // client's true budget, before a +-20% roll
+    rosterBias: 0.6, // chance a request is pitched at the rank of someone in town
+    payBasePerJob: 18, // client's true budget per job is base + perRank * rank,
+    payPerRankPerJob: 12, // before a +-20% roll
     requestExpiryDays: 3, // unposted requests lapse
     postingExpiryDays: 5, // untaken postings come down
   },
@@ -64,7 +66,8 @@ export const TUNING = {
   fit: { best: 1, also: 0.7, other: 0.4, coveredAt: 0.7 },
 
   needs: {
-    dailyUpkeep: 2,
+    dailyUpkeep: 1,
+    upkeepPerRank: 1, // more upkeep for each rank of true level above F
     brokeLimit: -40,
     restAbove: 60, // fatigue at which they stop to rest
     restUntil: 20,
@@ -108,6 +111,13 @@ export const TUNING = {
     noise: 6,
     actThreshold: 4,
     formWaitTicks: 18, // hours a leader waits for a full party
+    joinBonus: 8, // joining a party already forming beats starting another
+    shunTicks: 48, // after giving up on a quest, hours before taking it again
+  },
+
+  save: {
+    keepLogDays: 7, // the live log keeps this many days, plus anything still needed
+    archiveAfterDays: 7, // finished quests and parties leave the live state
   },
 
   expedition: {
@@ -118,7 +128,9 @@ export const TUNING = {
     missingJobMult: 0.8, // party power multiplier per uncovered job
     hits: { clean: 1, hard: 2 }, // failed hits everyone
     damage: { clean: [0, 0.12], hard: [0.2, 0.45], failed: [0.4, 0.8] },
-    hazard: { countered: 0.6, prepared: 0.85, unprepared: 1.5 },
+    // countered: someone assigned to the counter job; helped: someone else in the
+    // party fits that job well; prepared: it was on the posting.
+    hazard: { countered: 0.6, helped: 0.75, prepared: 0.85, unprepared: 1.5 },
     tankShare: 0.6,
     tankDamageMult: 0.7,
     healBetween: 0.25,

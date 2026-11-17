@@ -3,6 +3,26 @@
 Audited 2026-11-17, at commit `e76204d`. The findings here set the scope of
 milestone 2 (see TODO.md).
 
+## Status after milestone 2
+
+| Finding | Status |
+| --- | --- |
+| A1 replay and saves | Fixed: input journal, `save.js`, `tools/replay.js`, a trimmed log; a year saves in about 850 KB |
+| A2 hazards | Fixed: anyone fit for the counter job helps; the clerk recommends a counter |
+| A3 economy | Fixed: roster-pitched requests, base pay, upkeep by rank, low-rank work for every job; broke departures went from about 20 a run to about 3 |
+| A4 party formation | Fixed: cool-down, stopgap places, joining preferred; break-ups halved and no loops |
+| B1 report causes | Fixed: going out injured, the traits behind choices, leader or follower, double blame, unrecommended counters |
+| B2 brittle test | Fixed: 16 seeds and a paired t statistic |
+| B3 progression | Measured, deferred to the calendar decision |
+| B4 client budget | Deferred to milestone 6 |
+| B5 goals, rivals, retirement | Deferred to milestone 3 or later |
+| B6 truth isolation | Fixed: decisions get copies |
+| C1, C2 | Fixed |
+| C3 event schema | Fixed: `docs/events.md`, checked by a test |
+| C4 clerk generator | Moot: replay uses the journal |
+| C5 archiving | Fixed |
+| C6 golden hash | Left as a tool: `tools/replay.js` checks hashes |
+
 ## Verdict
 
 The core does what milestone 1 promised. Runs replay exactly, the decision code

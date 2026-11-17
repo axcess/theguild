@@ -5,13 +5,23 @@ import { CLASSES } from '../src/data/classes.js';
 import { TUNING } from '../src/data/tuning.js';
 import { rankForLevel } from '../src/sim/index.js';
 import { fitOf } from '../src/sim/adventurers.js';
+import { TRAITS } from '../src/data/traits.js';
+import { ARCHETYPES } from '../src/data/archetypes.js';
+import { HAZARDS } from '../src/data/quests.js';
 
-const runs = [1, 2, 3, 4].map((seed) => runDays(newRun(seed, 0.3), 100).sim);
+const runs = [1, 2, 3, 4].map((seed) => runDays(newRun(seed, 0.3), 100));
 
+// A failed quest is reported when the party was wiped out, or retreated with someone
+// dead or newly injured. A clean retreat is only logged.
 test('every death and every failed quest has an incident report', () => {
-  for (const sim of runs) {
-    const deaths = sim.log.filter((e) => e.type === 'death');
-    const failed = sim.log.filter((e) => e.type === 'return' && (e.outcome === 'retreat' || e.outcome === 'wiped'));
+  for (const { sim, log } of runs) {
+    const deaths = log.filter((e) => e.type === 'death');
+    const hurt = (e) => e.dead.length > 0 || log.some((x) => x.type === 'injured' && x.party === e.party);
+    const failed = log.filter((e) => e.type === 'return' && (e.outcome === 'wiped' || (e.outcome === 'retreat' && hurt(e))));
+    const cleanRetreats = log.filter((e) => e.type === 'return' && e.outcome === 'retreat' && !hurt(e));
+    for (const r of cleanRetreats) {
+      assert.ok(!sim.reports.some((rep) => rep.kind === 'failed_quest' && rep.quest === r.quest), `clean retreat ${r.quest} was reported`);
+    }
     for (const d of deaths) {
       assert.ok(sim.reports.some((r) => r.kind === 'death' && r.subject === d.victim), `no report for death of ${d.victim}`);
     }
@@ -25,13 +35,21 @@ test('every death and every failed quest has an incident report', () => {
 
 // Each cause is checked against the log entries it names, independently of how
 // the report was written.
-function verifyCause(sim, report, cause) {
-  const ev = cause.evidence.map((i) => sim.log[i]);
-  const depart = sim.log[report.log[0]];
+function verifyCause(log, report, cause) {
+  const ev = cause.evidence.map((i) => log[i]);
+  const depart = log[report.log[0]];
   assert.equal(depart.type, 'depart');
   assert.equal(depart.party, report.party);
   for (const e of ev) assert.ok(e.party === report.party, `evidence ${e.i} is from another party`);
   const member = (id) => depart.members.find((m) => m.id === id);
+
+  // Named traits must belong to the person, and a role must match who led.
+  if (cause.traits) {
+    const m = member(cause.adv);
+    const names = [...m.traits.map((t) => TRAITS[t].name), ARCHETYPES[m.archetype].name];
+    for (const t of cause.traits) if (!names.includes(t)) return false;
+  }
+  if (cause.role && cause.role !== (cause.adv === depart.leader ? 'leader' : 'member')) return false;
 
   switch (cause.kind) {
     case 'rank_under':
@@ -65,7 +83,18 @@ function verifyCause(sim, report, cause) {
     case 'rank_inflated': {
       const m = member(cause.adv);
       if (!(m.recordRank > rankForLevel(m.level))) return false;
-      return cause.blame === 'paperwork' ? m.recordRank > rankForLevel(m.claimLevel) : m.claimLevel > m.level;
+      return cause.blame === 'paperwork'
+        ? m.recordRank > rankForLevel(m.claimLevel)
+        : m.claimLevel > m.level && rankForLevel(m.claimLevel) > rankForLevel(m.level);
+    }
+    case 'went_injured':
+      return member(cause.adv).injury > 0;
+    case 'counter_unrecommended': {
+      const enc = ev.find((e) => e.type === 'encounter');
+      const h = enc.hazards.find((x) => x.hazard === cause.hazard);
+      const counter = HAZARDS[cause.hazard].counter;
+      const recommended = depart.posting.slots.some((sl) => sl.some((c) => fitOf(c, counter) >= TUNING.fit.coveredAt));
+      return h && h.posted && !h.countered && !h.helped && !recommended;
     }
     case 'reached_up': {
       const m = member(cause.adv);
@@ -91,13 +120,13 @@ function verifyCause(sim, report, cause) {
 test('each cause in an incident report matches something real in the log', () => {
   const blames = { paperwork: 0, adventurer: 0, luck: 0 };
   let checked = 0;
-  for (const sim of runs) {
+  for (const { sim, log } of runs) {
     for (const report of sim.reports) {
       assert.ok(report.causes.length > 0, `report ${report.id} has no causes`);
       for (const cause of report.causes) {
         assert.ok(['paperwork', 'adventurer', 'luck'].includes(cause.blame));
         assert.ok(cause.evidence.length > 0);
-        assert.ok(verifyCause(sim, report, cause), `report ${report.id}: unsupported cause ${JSON.stringify(cause)}`);
+        assert.ok(verifyCause(log, report, cause), `report ${report.id}: unsupported cause ${JSON.stringify(cause)}`);
         blames[cause.blame] += 1;
         checked += 1;
       }

@@ -33,8 +33,12 @@ function cleanPosting(p) {
   };
 }
 
+// `by` names who did the paperwork: the player, the scripted clerk, or later a
+// member of staff. It defaults to 'clerk' and is carried into the log.
 export function applyAction(state, action) {
   if (!counterOpen(state.tick)) return refuse('the counter is closed');
+  const by = action?.by ?? 'clerk';
+  if (typeof by !== 'string' || by.length === 0) return refuse('unknown actor');
   switch (action?.type) {
     case 'register': {
       const adv = findAdventurer(state, action.adv);
@@ -44,7 +48,7 @@ export function applyAction(state, action) {
       adv.record = { cls: action.cls, rank: action.rank };
       adv.status = 'idle';
       addHistory(adv, state.tick, 'registered', { cls: action.cls, rank: action.rank });
-      logEvent(state, 'register', { adv: adv.id, cls: action.cls, rank: action.rank, claim: { ...adv.claim } });
+      logEvent(state, 'register', { by, adv: adv.id, cls: action.cls, rank: action.rank, claim: { ...adv.claim } });
       return { ok: true };
     }
     case 'post': {
@@ -55,14 +59,14 @@ export function applyAction(state, action) {
       quest.posting = posting;
       quest.status = 'posted';
       quest.postedAt = state.tick;
-      logEvent(state, 'post', { quest: quest.id, posting: structuredClone(posting) });
+      logEvent(state, 'post', { by, quest: quest.id, posting: structuredClone(posting) });
       return { ok: true };
     }
     case 'reject': {
       const quest = findQuest(state, action.quest);
       if (!quest || quest.status !== 'requested') return refuse('no such request');
       quest.status = 'rejected';
-      logEvent(state, 'reject', { quest: quest.id });
+      logEvent(state, 'reject', { by, quest: quest.id });
       return { ok: true };
     }
     default:

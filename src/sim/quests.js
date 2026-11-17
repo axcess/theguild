@@ -7,11 +7,27 @@ import { RANKS } from '../data/ranks.js';
 import { TUNING } from '../data/tuning.js';
 import { randInt, randRange, chance, pick, weightedPick } from './rng.js';
 import { logEvent } from './state.js';
+import { rankForLevel } from './adventurers.js';
 
 export function generateRequest(state) {
   const R = TUNING.requests;
-  const template = weightedPick(state, QUEST_TEMPLATES, (t) => t.weight);
-  const rank = randInt(state, template.ranks[0], template.ranks[1]);
+  // Most requests are pitched at what the people in town can handle, standing in
+  // for a town economy that grows work around its adventurers.
+  let template = null;
+  let rank = null;
+  const roster = state.adventurers.filter((a) => a.record);
+  if (roster.length > 0 && chance(state, R.rosterBias)) {
+    const target = rankForLevel(pick(state, roster).level);
+    const fits = QUEST_TEMPLATES.filter((t) => t.ranks[0] <= target && target <= t.ranks[1]);
+    if (fits.length > 0) {
+      template = weightedPick(state, fits, (t) => t.weight);
+      rank = target;
+    }
+  }
+  if (!template) {
+    template = weightedPick(state, QUEST_TEMPLATES, (t) => t.weight);
+    rank = randInt(state, template.ranks[0], template.ranks[1]);
+  }
   const truth = {
     rank,
     level: RANKS[rank].minLevel + randInt(state, 0, 4),
@@ -19,7 +35,7 @@ export function generateRequest(state) {
     hazards: template.hazards.filter(([, p]) => chance(state, p)).map(([h]) => h),
     encounters: randInt(state, template.encounters[0], template.encounters[1]),
     durationTicks: randInt(state, template.hours[0], template.hours[1]),
-    pay: Math.round(R.payPerRankPerJob * (rank + 1) * template.jobs.length * randRange(state, 0.8, 1.2)),
+    pay: Math.round((R.payBasePerJob + R.payPerRankPerJob * rank) * template.jobs.length * randRange(state, 0.8, 1.2)),
   };
   const quest = {
     id: state.nextId.quest++,
@@ -31,6 +47,7 @@ export function generateRequest(state) {
     truth,
     posting: null,
     postedAt: null,
+    closedAt: null,
     party: null,
     outcome: null,
   };

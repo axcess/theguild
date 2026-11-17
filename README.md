@@ -16,3 +16,13 @@ Plain HTML, CSS and JavaScript with no build step and no dependencies.
 ```bash
 npm test
 ```
+
+Run a seed and read its incident reports, or replay and verify a save:
+
+```bash
+node tools/run.js --seed 1 --error 0.2
+```
+
+```bash
+node tools/replay.js --seed 1 --days 40 --report 3
+```

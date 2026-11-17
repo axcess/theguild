@@ -31,6 +31,7 @@ Where it lists an open question, use the working assumption and note it in PROGR
 - `tests/`: tests for Node's built-in runner, named `*.test.js`.
 - `tools/`: headless scripts, such as running a seed and printing its log.
 - `prompts/`: the briefs used to start work sessions.
+- `docs/`: reference documents, such as the event log schema.
 - Run the tests with `npm test`. There are no dependencies to install.
 - The page loads the same ES modules, so serve the folder (`python3 -m http.server`)
   instead of opening the file directly.

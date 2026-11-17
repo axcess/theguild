@@ -7,9 +7,10 @@ const ACTOR_LISTS = ['survivors'];
 
 test('dead adventurers never act again', () => {
   for (const seed of [1, 2, 3, 4]) {
-    const sim = runDays(newRun(seed, 0.3), 100).sim;
+    const run = runDays(newRun(seed, 0.3), 100);
+    const sim = run.sim;
     const diedAt = new Map();
-    for (const e of sim.log) {
+    for (const e of run.log) {
       if (e.type === 'death') {
         diedAt.set(e.victim, e.i);
         continue;
@@ -32,15 +33,15 @@ test('dead adventurers never act again', () => {
 });
 
 test('friends and party members grieve a death', () => {
-  const sim = runDays(newRun(2, 0.3), 100).sim;
-  const deaths = sim.log.filter((e) => e.type === 'death');
-  const grieved = deaths.filter((d) => sim.log.some((e) => e.type === 'grief' && e.for === d.victim));
+  const { log } = runDays(newRun(2, 0.3), 100);
+  const deaths = log.filter((e) => e.type === 'death');
+  const grieved = deaths.filter((d) => log.some((e) => e.type === 'grief' && e.for === d.victim));
   assert.ok(grieved.length > 0);
 });
 
 test('adventurers gain levels from quests', () => {
-  const sim = runDays(newRun(1, 0), 100).sim;
-  const ups = sim.log.filter((e) => e.type === 'level_up');
+  const { log } = runDays(newRun(1, 0), 100);
+  const ups = log.filter((e) => e.type === 'level_up');
   assert.ok(ups.length > 0);
   for (const u of ups) assert.ok(u.level >= 2);
 });

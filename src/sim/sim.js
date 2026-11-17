@@ -1,17 +1,19 @@
 // The tick loop. advance() moves the world on by one hour; step() applies a batch
-// of clerk actions first.
+// of clerk actions first and records the accepted ones in the journal.
 
 import { TUNING } from '../data/tuning.js';
 import { random, randInt, chance } from './rng.js';
 import { hourOf, counterOpen } from './clock.js';
-import { emptyState, logEvent, findAdventurer, findParty, addHistory } from './state.js';
-import { spawnNewcomer, modifier } from './adventurers.js';
+import { emptyState, logEvent, findAdventurer, findParty, addHistory, trimLog } from './state.js';
+import { spawnNewcomer, modifier, rankForLevel } from './adventurers.js';
 import { generateRequest } from './quests.js';
-import { buildDecisionView } from './view.js';
+import { buildDecisionView, buildSelfView } from './view.js';
 import { chooseAction, decideLeave } from './decide.js';
 import { formParty, joinParty, checkFormingParties } from './party.js';
 import { resolveExpedition } from './expedition.js';
 import { applyAction } from './actions.js';
+
+const DAY = TUNING.clock.ticksPerDay;
 
 export function createState(seed) {
   const state = emptyState(seed);
@@ -20,7 +22,11 @@ export function createState(seed) {
 }
 
 export function step(state, actions = []) {
-  const results = actions.map((a) => applyAction(state, a));
+  const results = actions.map((action) => {
+    const result = applyAction(state, action);
+    if (result.ok) state.journal.push({ t: state.tick, action: structuredClone(action) });
+    return result;
+  });
   advance(state);
   return results;
 }
@@ -44,10 +50,10 @@ function newDay(state) {
   const roll = () => random(state);
 
   for (const q of state.quests) {
-    if (q.status === 'requested' && state.tick - q.requestedAt >= R.requestExpiryDays * TUNING.clock.ticksPerDay) {
+    if (q.status === 'requested' && state.tick - q.requestedAt >= R.requestExpiryDays * DAY) {
       q.status = 'lapsed';
       logEvent(state, 'request_lapsed', { quest: q.id });
-    } else if (q.status === 'posted' && state.tick - q.postedAt >= R.postingExpiryDays * TUNING.clock.ticksPerDay) {
+    } else if (q.status === 'posted' && state.tick - q.postedAt >= R.postingExpiryDays * DAY) {
       q.status = 'expired';
       logEvent(state, 'posting_expired', { quest: q.id });
     }
@@ -55,8 +61,9 @@ function newDay(state) {
 
   const leaving = [];
   for (const adv of state.adventurers) {
-    if (adv.status === 'away' || adv.status === 'forming') continue;
-    adv.needs.gold -= N.dailyUpkeep;
+    adv.shunned = adv.shunned.filter((s) => s.until > state.tick);
+    if (adv.status === 'away') continue;
+    adv.needs.gold -= N.dailyUpkeep + N.upkeepPerRank * rankForLevel(adv.level);
     if (adv.needs.injury > 0) {
       adv.needs.injuryDays += 1;
       if (adv.needs.injuryDays >= N.injuryHealDays) {
@@ -65,17 +72,41 @@ function newDay(state) {
       }
     }
     adv.needs.morale += Math.sign(M.rest - adv.needs.morale) * Math.min(M.drift, Math.abs(M.rest - adv.needs.morale));
-    const daysWaiting = Math.floor((state.tick - adv.arrivedAt) / TUNING.clock.ticksPerDay);
-    const reason = decideLeave(adv, daysWaiting, roll);
+    if (adv.status === 'forming') continue; // committed to a party; no thought of leaving
+    const daysWaiting = Math.floor((state.tick - adv.arrivedAt) / DAY);
+    const reason = decideLeave(buildSelfView(adv), daysWaiting, roll);
     if (reason) leaving.push([adv, reason]);
   }
   for (const [adv, reason] of leaving) {
     adv.status = 'left';
     addHistory(adv, state.tick, 'left', { reason });
     state.adventurers = state.adventurers.filter((a) => a !== adv);
-    state.departed.push({ id: adv.id, name: adv.name, cls: adv.cls, level: adv.level, leftAt: state.tick, reason, history: adv.history });
+    // Those who leave keep a short record, not their whole history.
+    state.departed.push({
+      id: adv.id,
+      name: adv.name,
+      cls: adv.cls,
+      level: adv.level,
+      arrivedAt: adv.arrivedAt,
+      leftAt: state.tick,
+      reason,
+      quests: adv.history.filter((h) => h.what === 'returned').length,
+    });
     logEvent(state, 'leave', { adv: adv.id, reason });
   }
+
+  archive(state);
+  trimLog(state, TUNING.save.keepLogDays * DAY);
+}
+
+// Finished quests and parties leave the live state after a while. The log and the
+// incident reports keep what happened.
+function archive(state) {
+  const cutoff = state.tick - TUNING.save.archiveAfterDays * DAY;
+  const done = ['closed', 'rejected', 'lapsed', 'expired'];
+  const lastTouched = (q) => Math.max(q.requestedAt, q.postedAt ?? 0, q.closedAt ?? 0);
+  state.quests = state.quests.filter((q) => !(done.includes(q.status) && lastTouched(q) < cutoff));
+  state.parties = state.parties.filter((p) => !((p.status === 'done' || p.status === 'disbanded') && (p.endedAt ?? 0) < cutoff));
 }
 
 function newRequests(state) {
@@ -116,22 +147,24 @@ function decisions(state) {
     if (!adv || (adv.status !== 'idle' && adv.status !== 'resting')) continue;
     if (adv.status === 'idle' && !chance(state, modifier(adv, 'activity'))) continue;
     if (!view) view = buildDecisionView(state);
-    const choice = chooseAction(view, adv, roll);
+    const choice = chooseAction(view, buildSelfView(adv), roll);
     switch (choice.type) {
       case 'rest':
         adv.status = 'resting';
         logEvent(state, 'rest', { adv: adv.id });
+        view = null;
         break;
       case 'stop_rest':
         adv.status = 'idle';
+        view = null;
         break;
       case 'take':
-        formParty(state, adv, choice.quest, choice.slot, choice.reachedUp);
+        formParty(state, adv, choice.quest, choice.slot, choice.reachedUp, choice.stopgap);
         addHistory(adv, state.tick, 'took_quest', { quest: choice.quest });
         view = null;
         break;
       case 'join':
-        joinParty(state, findParty(state, choice.party), adv, choice.slot, choice.reachedUp);
+        joinParty(state, findParty(state, choice.party), adv, choice.slot, choice.reachedUp, choice.stopgap);
         view = null;
         break;
       default:

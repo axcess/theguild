@@ -7,15 +7,15 @@ const CARELESS = 0.2;
 test('same seed and same clerk inputs give identical logs and state over 100 days', () => {
   const a = runDays(newRun(42, CARELESS), 100);
   const b = runDays(newRun(42, CARELESS), 100);
-  assert.equal(JSON.stringify(a.sim.log), JSON.stringify(b.sim.log));
+  assert.equal(JSON.stringify(a.log), JSON.stringify(b.log));
   assert.equal(JSON.stringify(a.sim), JSON.stringify(b.sim));
-  assert.ok(a.sim.log.length > 1000, 'the run should have produced a real log');
+  assert.ok(a.log.length > 1000, 'the run should have produced a real log');
 });
 
 test('a different seed gives a different log', () => {
   const a = runDays(newRun(42, CARELESS), 100);
   const b = runDays(newRun(43, CARELESS), 100);
-  assert.notEqual(JSON.stringify(a.sim.log), JSON.stringify(b.sim.log));
+  assert.notEqual(JSON.stringify(a.log), JSON.stringify(b.log));
 });
 
 test('saving to JSON mid-run and continuing gives the same log as an unbroken run', () => {
@@ -26,7 +26,7 @@ test('saving to JSON mid-run and continuing gives the same log as an unbroken ru
   const resumed = JSON.parse(JSON.stringify(first));
   runTicks(resumed, 63 * 24 - 13);
 
-  assert.equal(JSON.stringify(resumed.sim.log), JSON.stringify(whole.sim.log));
+  assert.equal(JSON.stringify(resumed.log), JSON.stringify(whole.log));
   assert.equal(JSON.stringify(resumed.sim), JSON.stringify(whole.sim));
 });
 

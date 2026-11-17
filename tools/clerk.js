@@ -4,11 +4,14 @@
 // Registration copies what the newcomer claims, with the clerk's own slips on top.
 // Postings start from the request's truth (standing in for a clerk who investigates)
 // and then lose accuracy at `errorRate`: ranks and levels set too low, hazards left
-// off, needed classes left out. The clerk has its own seeded generator so its
+// off, needed classes left out, no one recommended to deal with a listed hazard. The clerk has its own seeded generator so its
 // choices never disturb the simulation's rolls.
 
 import { CLASSES, CLASS_IDS } from '../src/data/classes.js';
 import { RANKS } from '../src/data/ranks.js';
+import { HAZARDS } from '../src/data/quests.js';
+import { TUNING } from '../src/data/tuning.js';
+import { fitOf } from '../src/sim/adventurers.js';
 import { seedFrom, randInt, chance, pick } from '../src/sim/rng.js';
 import { counterOpen, rankForLevel } from '../src/sim/index.js';
 
@@ -52,6 +55,12 @@ export function clerkActions(clerk, state) {
     if (chance(clerk, e)) level = Math.max(1, level - randInt(clerk, 2, 5));
     const hazards = t.hazards.filter(() => !chance(clerk, e));
     const slots = t.jobs.map((job) => (chance(clerk, e) ? [] : bestClassesFor(job)));
+    // A hazard whose counter no recommended class can handle gets an extra place.
+    for (const h of hazards) {
+      const counter = HAZARDS[h].counter;
+      const handled = slots.some((slot) => slot.some((c) => fitOf(c, counter) >= TUNING.fit.coveredAt));
+      if (!handled && !chance(clerk, e)) slots.push(bestClassesFor(counter));
+    }
     actions.push({ type: 'post', quest: q.id, posting: { rank, level, hazards, slots, reward: t.pay } });
   }
   return actions;

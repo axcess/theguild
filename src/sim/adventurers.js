@@ -31,6 +31,10 @@ export function fitOf(cls, job) {
   return TUNING.fit.other;
 }
 
+export function bestJob(cls) {
+  return CLASSES[cls].best;
+}
+
 export function maxHp(adv) {
   const H = TUNING.hp;
   return H.base + adv.stats.vit * H.perVit + adv.level * H.perLevel;
@@ -118,6 +122,7 @@ export function spawnNewcomer(state) {
     status: 'unregistered',
     party: null,
     friends: [],
+    shunned: [], // quests they gave up on recently: { quest, until }
     arrivedAt: state.tick,
     history: [],
   };

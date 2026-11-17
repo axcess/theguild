@@ -2,10 +2,11 @@
 
 import { TUNING } from '../data/tuning.js';
 import { fitOf } from './adventurers.js';
+import { buildSelfView } from './view.js';
 import { decideAfterWaiting } from './decide.js';
 import { logEvent, findAdventurer, findQuest, addHistory } from './state.js';
 
-export function formParty(state, adv, questId, slot, reachedUp) {
+export function formParty(state, adv, questId, slot, reachedUp, stopgap = false) {
   const quest = findQuest(state, questId);
   const party = {
     id: state.nextId.party++,
@@ -20,17 +21,18 @@ export function formParty(state, adv, questId, slot, reachedUp) {
     short: false,
     departLog: null,
     returnTick: null,
+    endedAt: null,
   };
   state.parties.push(party);
   quest.status = 'taken';
   quest.party = party.id;
-  logEvent(state, 'party_formed', { party: party.id, quest: questId, leader: adv.id, slot, reachedUp });
+  logEvent(state, 'party_formed', { party: party.id, quest: questId, leader: adv.id, slot, reachedUp, stopgap });
   seat(state, party, adv, slot, reachedUp);
   return party;
 }
 
-export function joinParty(state, party, adv, slot, reachedUp) {
-  logEvent(state, 'party_join', { party: party.id, quest: party.quest, adv: adv.id, slot, reachedUp });
+export function joinParty(state, party, adv, slot, reachedUp, stopgap = false) {
+  logEvent(state, 'party_join', { party: party.id, quest: party.quest, adv: adv.id, slot, reachedUp, stopgap });
   seat(state, party, adv, slot, reachedUp);
 }
 
@@ -142,6 +144,7 @@ function depart(state, party, short) {
           claimCls: m.claim.cls,
           claimLevel: m.claim.level,
           traits: [...m.traits],
+          archetype: m.archetype,
           job: assign[m.id],
           fit: fit[m.id],
           reachedUp: s.reachedUp,
@@ -157,12 +160,15 @@ function depart(state, party, short) {
 function disband(state, party) {
   const quest = findQuest(state, party.quest);
   party.status = 'disbanded';
+  party.endedAt = state.tick;
   quest.status = 'posted';
+  quest.postedAt = state.tick; // back on the board, freshly
   quest.party = null;
   for (const id of party.members) {
     const m = findAdventurer(state, id);
     m.status = 'idle';
     m.party = null;
+    m.shunned.push({ quest: quest.id, until: state.tick + TUNING.decision.shunTicks });
   }
   logEvent(state, 'party_disband', { party: party.id, quest: quest.id, leader: party.leader });
 }
@@ -175,7 +181,7 @@ export function checkFormingParties(state) {
       depart(state, party, false);
     } else if (state.tick - party.formedAt >= TUNING.decision.formWaitTicks) {
       const leader = findAdventurer(state, party.leader);
-      const choice = decideAfterWaiting(leader, filled, party.slots.length);
+      const choice = decideAfterWaiting(buildSelfView(leader), filled, party.slots.length);
       if (choice === 'depart') {
         logEvent(state, 'depart_short', { party: party.id, leader: leader.id, filled, size: party.slots.length });
         depart(state, party, true);

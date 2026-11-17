@@ -5,16 +5,28 @@
 // `roll` is a function returning a number in [0, 1) from the seeded generator.
 
 import { TUNING } from '../data/tuning.js';
-import { modifier } from './adventurers.js';
+import { modifier, fitOf, bestJob } from './adventurers.js';
 
 const D = TUNING.decision;
 
 // The first empty slot this guild-recorded class may fill: a slot naming the class,
-// else a slot open to any class. Returns -1 if none.
-export function openSlot(slots, recordCls) {
+// else a slot open to any class. Failing both, a named slot whose job this class
+// can fill passably, as long as nobody of a named class is free to take it.
+// `freeClasses` is the recorded classes of the other adventurers free right now.
+// Returns { slot, stopgap }, with slot -1 if none.
+export function openSlot(slots, recordCls, freeClasses = []) {
   const named = slots.findIndex((s) => s.member === null && s.classes.includes(recordCls));
-  if (named >= 0) return named;
-  return slots.findIndex((s) => s.member === null && s.classes.length === 0);
+  if (named >= 0) return { slot: named, stopgap: false };
+  const any = slots.findIndex((s) => s.member === null && s.classes.length === 0);
+  if (any >= 0) return { slot: any, stopgap: false };
+  const stopgap = slots.findIndex(
+    (s) =>
+      s.member === null &&
+      s.classes.length > 0 &&
+      fitOf(recordCls, bestJob(s.classes[0])) >= TUNING.fit.coveredAt &&
+      !freeClasses.some((c) => s.classes.includes(c)),
+  );
+  return { slot: stopgap, stopgap: stopgap >= 0 };
 }
 
 function injuryTolerance(self) {
@@ -56,25 +68,30 @@ export function chooseAction(view, self, roll) {
   }
   if (self.needs.fatigue >= F.restAbove || self.needs.injury > tolerance) return { type: 'rest' };
 
+  const freeClasses = view.roster.filter((r) => r.id !== self.id).map((r) => r.recordCls);
+  const shunned = (quest) => self.shunned.some((s) => s.quest === quest);
+
   let best = null;
   for (const entry of view.board) {
+    if (shunned(entry.quest)) continue;
     const slots = entry.posting.slots.map((classes) => ({ classes, member: null }));
-    const slot = openSlot(slots, self.record.cls);
+    const { slot, stopgap } = openSlot(slots, self.record.cls, freeClasses);
     if (slot < 0) continue;
     const s = scorePosting(self, entry.posting, roll);
     if (s && (!best || s.score > best.score)) {
-      best = { type: 'take', quest: entry.quest, slot, score: s.score, reachedUp: s.reachedUp };
+      best = { type: 'take', quest: entry.quest, slot, stopgap, score: s.score, reachedUp: s.reachedUp };
     }
   }
   for (const entry of view.forming) {
-    const slot = openSlot(entry.slots, self.record.cls);
+    if (shunned(entry.quest)) continue;
+    const { slot, stopgap } = openSlot(entry.slots, self.record.cls, freeClasses);
     if (slot < 0) continue;
     const s = scorePosting(self, entry.posting, roll);
     if (!s) continue;
     const hasFriend = entry.slots.some((sl) => sl.member !== null && self.friends.includes(sl.member));
-    const score = s.score + (hasFriend ? modifier(self, 'friendBonus') : 0);
+    const score = s.score + D.joinBonus + (hasFriend ? modifier(self, 'friendBonus') : 0);
     if (!best || score > best.score) {
-      best = { type: 'join', party: entry.party, slot, score, reachedUp: s.reachedUp };
+      best = { type: 'join', party: entry.party, slot, stopgap, score, reachedUp: s.reachedUp };
     }
   }
   if (best && best.score >= D.actThreshold) return best;

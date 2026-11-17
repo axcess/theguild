@@ -19,7 +19,7 @@ const showReports = Number(arg('reports', 3));
 
 const run = runDays(newRun(seed, errorRate), days);
 const sim = run.sim;
-const s = summarize(sim);
+const s = summarize(run);
 
 console.log(`Seed ${seed}, ${days} days, clerk error rate ${errorRate}`);
 console.log(`Arrivals ${s.arrivals}, registered ${s.registered}, cast now ${s.cast}, left town ${s.left}`);
@@ -45,7 +45,7 @@ for (const r of shown) {
 
 if (arg('log', false)) {
   console.log('\nFull log:');
-  for (const e of sim.log) {
+  for (const e of run.log) {
     const { i, t, type, ...rest } = e;
     console.log(`${i}\t${formatTime(t)}\t${type}\t${JSON.stringify(rest)}`);
   }

@@ -39,6 +39,30 @@ export const QUEST_TEMPLATES = [
     encounters: [1, 3], hours: [8, 20],
   },
   {
+    id: 'lazar_house', title: 'Brother Osbert needs a steady pair of hands at the lazar house', weight: 2,
+    ranks: [0, 1], jobs: ['healer'],
+    hazards: [['poison', 0.3]],
+    encounters: [1, 1], hours: [8, 16],
+  },
+  {
+    id: 'bridge_gate', title: 'Hold the gate at Cold Ford while the ferryman is at market', weight: 2,
+    ranks: [0, 1], jobs: ['tank'],
+    hazards: [['brute', 0.3], ['ambush', 0.2]],
+    encounters: [1, 2], hours: [8, 14],
+  },
+  {
+    id: 'players_wagon', title: 'Walk the players\' wagon to Mottley fair and keep the crowd sweet', weight: 2,
+    ranks: [0, 1], jobs: ['support', 'tank'],
+    hazards: [['swarm', 0.2]],
+    encounters: [1, 2], hours: [10, 20],
+  },
+  {
+    id: 'hill_beacon', title: 'Relight the hill beacon and keep it lit through the night', weight: 2,
+    ranks: [1, 2], jobs: ['support', 'scout'],
+    hazards: [['ambush', 0.3], ['curse', 0.2]],
+    encounters: [1, 2], hours: [10, 18],
+  },
+  {
     id: 'wolf_pack', title: 'Wolves took four ewes off the high pasture', weight: 3,
     ranks: [1, 2], jobs: ['tank', 'damage'],
     hazards: [['swarm', 0.5], ['ambush', 0.3]],

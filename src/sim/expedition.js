@@ -4,7 +4,8 @@
 import { HAZARDS } from '../data/quests.js';
 import { TUNING } from '../data/tuning.js';
 import { random, randInt, randRange, chance, pick } from './rng.js';
-import { maxHp, rawPower, expectedPower, condition, gainXp, modifier } from './adventurers.js';
+import { maxHp, rawPower, expectedPower, condition, gainXp, modifier, fitOf } from './adventurers.js';
+import { buildSelfView } from './view.js';
 import { decidePressOn } from './decide.js';
 import { logEvent, findAdventurer, findQuest, addHistory, insertSorted } from './state.js';
 import { deriveIncident } from './reports.js';
@@ -46,13 +47,19 @@ export function resolveExpedition(state, party) {
     const roll = ratio * randRange(state, E.rollSpread[0], E.rollSpread[1]);
     const severity = roll >= 1 ? 'clean' : roll >= E.failBelow ? 'hard' : 'failed';
 
-    const hazards = hazardsAt[n].map((h) => ({
-      hazard: h,
-      countered: memberFor(party, HAZARDS[h].counter, alive) !== null,
-      posted: posting.hazards.includes(h),
-    }));
+    const hazards = hazardsAt[n].map((h) => {
+      const counter = HAZARDS[h].counter;
+      const countered = memberFor(party, counter, alive) !== null;
+      const helped = !countered && alive.some((m) => fitOf(m.cls, counter) >= TUNING.fit.coveredAt);
+      return { hazard: h, countered, helped, posted: posting.hazards.includes(h) };
+    });
     let mult = 1;
-    for (const x of hazards) mult *= x.countered ? E.hazard.countered : x.posted ? E.hazard.prepared : E.hazard.unprepared;
+    for (const x of hazards) {
+      if (x.countered) mult *= E.hazard.countered;
+      else if (x.helped) mult *= E.hazard.helped;
+      else if (x.posted) mult *= E.hazard.prepared;
+      else mult *= E.hazard.unprepared;
+    }
 
     const tank = memberFor(party, 'tank', alive);
     const hitCount = severity === 'failed' ? alive.length : Math.min(E.hits[severity], alive.length);
@@ -135,7 +142,7 @@ export function resolveExpedition(state, party) {
         max += hp[m.id].max;
       }
       const frac = round2(cur / max);
-      const choice = decidePressOn(leader, frac);
+      const choice = decidePressOn(buildSelfView(leader), frac);
       if (!choice.pressOn) {
         outcome = cleared * 2 >= truth.encounters ? 'partial' : 'retreat';
         logEvent(state, 'retreat', { party: party.id, quest: quest.id, n, forced: false, leader: leader.id, hpFrac: frac });
@@ -171,6 +178,7 @@ function finish(state, party, quest, members, hp, extraInjury, dead, cleared, ou
   const share = survivors.length ? Math.floor(totalPay / survivors.length) : 0;
   const xp = Math.round(TUNING.growth.xpPerRank * (truth.rank + 1) * (cleared / truth.encounters));
 
+  let hurt = false;
   for (const m of survivors) {
     const before = m.needs.injury;
     let add = extraInjury[m.id] ?? 0;
@@ -178,6 +186,7 @@ function finish(state, party, quest, members, hp, extraInjury, dead, cleared, ou
     m.needs.injury = Math.min(N.injuryMax, m.needs.injury + add);
     m.needs.injuryDays = 0;
     if (m.needs.injury > before) {
+      hurt = true;
       m.needs.morale += M.injured;
       addHistory(m, state.tick, 'injured', { quest: quest.id, injury: m.needs.injury });
       logEvent(state, 'injured', { adv: m.id, party: party.id, quest: quest.id, injury: m.needs.injury });
@@ -206,7 +215,9 @@ function finish(state, party, quest, members, hp, extraInjury, dead, cleared, ou
   for (const m of state.adventurers) m.needs.morale = clamp(m.needs.morale, 0, M.max);
 
   party.status = 'done';
+  party.endedAt = state.tick;
   quest.status = 'closed';
+  quest.closedAt = state.tick;
   quest.outcome = outcome;
   const returnIdx = logEvent(state, 'return', {
     party: party.id,
@@ -220,9 +231,11 @@ function finish(state, party, quest, members, hp, extraInjury, dead, cleared, ou
     xpEach: xp,
   });
 
-  for (const id of dead) addReport(state, deriveIncident(state.log, party.departLog, { kind: 'death', adv: id }));
-  if (outcome === 'retreat' || outcome === 'wiped') {
-    addReport(state, deriveIncident(state.log, party.departLog, { kind: 'failed_quest' }));
+  for (const id of dead) addReport(state, deriveIncident(state.log, state.logBase, party.departLog, { kind: 'death', adv: id }));
+  // A failed quest gets a report when the party was wiped out, or turned back with
+  // someone dead or hurt. A clean retreat is only logged.
+  if (outcome === 'wiped' || (outcome === 'retreat' && (dead.length > 0 || hurt))) {
+    addReport(state, deriveIncident(state.log, state.logBase, party.departLog, { kind: 'failed_quest' }));
   }
   return returnIdx;
 }

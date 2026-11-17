@@ -7,18 +7,32 @@ import { CLASSES } from '../data/classes.js';
 import { JOB_NAMES } from '../data/jobs.js';
 import { HAZARDS } from '../data/quests.js';
 import { TUNING } from '../data/tuning.js';
+import { TRAITS } from '../data/traits.js';
+import { ARCHETYPES } from '../data/archetypes.js';
 import { rankForLevel, fitOf } from './adventurers.js';
 
 const rankName = (r) => RANKS[r].id;
 const clsName = (c) => CLASSES[c].name;
 const article = (word) => (/^[aeiou]/i.test(word) ? `an ${word}` : `a ${word}`);
 
-// subject is { kind: 'death', adv } or { kind: 'failed_quest' }.
-export function deriveIncident(log, departIdx, subject) {
-  const d = log[departIdx];
+// The traits and archetype that pushed a member toward a choice: those whose
+// modifier for `key` leans the way `sign` says.
+function drivers(member, key, sign) {
+  const out = member.traits.filter((t) => Math.sign(TRAITS[t][key] ?? 0) === sign).map((t) => TRAITS[t].name);
+  const a = ARCHETYPES[member.archetype];
+  if (a && Math.sign(a[key] ?? 0) === sign) out.push(a.name);
+  return out;
+}
+
+const because = (list) => (list.length ? ` (${list.join(', ')})` : '');
+
+// `log` holds events numbered from `logBase`. subject is { kind: 'death', adv } or
+// { kind: 'failed_quest' }.
+export function deriveIncident(log, logBase, departIdx, subject) {
+  const d = log[departIdx - logBase];
   const events = [];
-  for (let i = departIdx + 1; i < log.length; i++) {
-    const e = log[i];
+  for (let k = departIdx - logBase + 1; k < log.length; k++) {
+    const e = log[k];
     if (e.party !== d.party) continue;
     events.push(e);
     if (e.type === 'return') break;
@@ -79,38 +93,64 @@ export function deriveIncident(log, departIdx, subject) {
   const seenHazards = [];
   for (const e of relevant) {
     for (const h of e.hazards) {
-      if (h.countered || h.posted || seenHazards.includes(h.hazard)) continue;
-      seenHazards.push(h.hazard);
-      add('hazard_hidden', 'paperwork', `${HAZARDS[h.hazard].name} was not on the posting`, [d.i, e.i], { hazard: h.hazard });
+      if (h.countered || seenHazards.includes(h.hazard)) continue;
+      if (!h.posted) {
+        seenHazards.push(h.hazard);
+        add('hazard_hidden', 'paperwork', `${HAZARDS[h.hazard].name} was not on the posting`, [d.i, e.i], { hazard: h.hazard });
+      } else if (!h.helped) {
+        const counter = HAZARDS[h.hazard].counter;
+        const recommended = d.posting.slots.some((slot) => slot.some((c) => fitOf(c, counter) >= TUNING.fit.coveredAt));
+        seenHazards.push(h.hazard);
+        if (!recommended) {
+          add('counter_unrecommended', 'paperwork', `${HAZARDS[h.hazard].name} was listed, but no one who could deal with it was recommended`, [d.i, e.i], { hazard: h.hazard });
+        }
+      }
     }
   }
 
-  // The people involved.
+  // The people involved. A choice names the traits behind it, and whether the
+  // person was leading.
+  const who = (m) => (m.id === d.leader ? `${m.name}, leading,` : m.name);
+  const role = (m) => (m.id === d.leader ? 'leader' : 'member');
   for (const m of subjects) {
+    if (m.injury > 0) {
+      const t = drivers(m, 'injuryTolerance', 1);
+      add('went_injured', 'adventurer', `${who(m)} set out still injured${because(t)}`, [d.i], { adv: m.id, role: role(m), traits: t });
+    }
     if (m.level >= d.truth.level) continue;
     const trueRank = rankForLevel(m.level);
     if (m.recordRank > trueRank) {
+      // Both can be true at once: the newcomer overstated, and the clerk wrote
+      // down more than even the claim supported.
       if (m.recordRank > rankForLevel(m.claimLevel)) {
         add('rank_inflated', 'paperwork', `${m.name} was registered at rank ${rankName(m.recordRank)} on a claimed level of ${m.claimLevel}`, [d.i], { adv: m.id });
-      } else {
-        add('rank_inflated', 'adventurer', `${m.name} claimed level ${m.claimLevel} at registration but is level ${m.level}`, [d.i], { adv: m.id });
+      }
+      if (m.claimLevel > m.level && rankForLevel(m.claimLevel) > trueRank) {
+        const t = drivers(m, 'lieChance', 1);
+        add('rank_inflated', 'adventurer', `${m.name} claimed level ${m.claimLevel} at registration but is level ${m.level}${because(t)}`, [d.i], { adv: m.id, traits: t });
       }
     }
     if (m.reachedUp) {
-      add('reached_up', 'adventurer', `${m.name} took a rank ${rankName(d.posting.rank)} posting on a rank ${rankName(m.recordRank)} record`, [d.i], { adv: m.id });
+      const t = drivers(m, 'reachUp', 1);
+      add('reached_up', 'adventurer', `${who(m)} took a rank ${rankName(d.posting.rank)} posting on a rank ${rankName(m.recordRank)} record${because(t)}`, [d.i], { adv: m.id, role: role(m), traits: t });
     }
     if (m.level < d.posting.level) {
-      add('below_level', 'adventurer', `${m.name} is level ${m.level}, below the recommended level ${d.posting.level}`, [d.i], { adv: m.id });
+      const t = drivers(m, 'selfLevelBias', 1);
+      add('below_level', 'adventurer', `${who(m)} is level ${m.level}, below the recommended level ${d.posting.level}${because(t)}`, [d.i], { adv: m.id, role: role(m), traits: t });
     }
   }
 
   if (d.short && !causes.some((c) => c.kind === 'job_ignored')) {
-    add('short_handed', 'adventurer', `the leader set out with ${d.members.length} of ${d.posting.slots.length} places filled`, [d.i]);
+    const leader = d.members.find((m) => m.id === d.leader);
+    const t = leader ? drivers(leader, 'departShort', 1) : [];
+    add('short_handed', 'adventurer', `the leader set out with ${d.members.length} of ${d.posting.slots.length} places filled${because(t)}`, [d.i], { traits: t, adv: d.leader });
   }
 
   for (const e of events) {
     if (e.type === 'press_on' && e.n < lastN) {
-      add('pressed_on', 'adventurer', `${nameOf(e.leader)} pressed on at ${Math.round(e.hpFrac * 100)}% health`, [e.i], { adv: e.leader });
+      const m = d.members.find((x) => x.id === e.leader);
+      const t = drivers(m, 'retreatShift', -1);
+      add('pressed_on', 'adventurer', `${nameOf(e.leader)} pressed on at ${Math.round(e.hpFrac * 100)}% health${because(t)}`, [e.i], { adv: e.leader, traits: t });
     }
   }
 
